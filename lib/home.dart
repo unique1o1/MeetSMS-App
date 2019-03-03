@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import "package:meetsms_app/databaseClient.dart";
 import 'package:meetsms_app/settting.dart';
+import 'package:meetsms_app/request.dart';
 
 class HomePage extends StatefulWidget {
   DatabaseClient db;
@@ -14,58 +15,112 @@ class HomePage extends StatefulWidget {
 
 class _HomePage extends State<HomePage> {
   String message;
-  String recepient;
+  String recepients;
+  Session http = Session();
+  String loginUrl = "http://www.meet.net.np/meet/action/login";
 
-  Widget _input(
-      String validation, bool, String label, String hint, Function save) {
-    return new TextFormField(
+  String smsUrl = "http://www.meet.net.np/meet/mod/sms/actions/send.php";
+
+  void initState() {
+    super.initState();
+    initialRequest();
+  }
+
+  void initialRequest() async {
+    Map<String, dynamic> userInfo = await widget.db.getinfo();
+
+    http.post(<String, String>{
+      "username": userInfo['username'],
+      "password": userInfo['password'],
+    }, loginUrl, cookieBool: true);
+  }
+
+  Widget _input(bool, String label, String hint, Function save) {
+    return new TextField(
       decoration: InputDecoration(
         hintText: hint,
         labelText: label,
-        // contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 20.0),
-        contentPadding:
-            new EdgeInsets.symmetric(vertical: 25.0, horizontal: 10.0),
+        // contentPadding:
+        contentPadding: bool
+            ? new EdgeInsets.symmetric(vertical: 50.0, horizontal: 10.0)
+            : EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 20.0),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(20.0)),
       ),
-      obscureText: bool,
-      validator: (value) => value.length <= 5 ? validation : null,
-      onSaved: save,
+      keyboardType: bool ? TextInputType.multiline : TextInputType.phone,
+      maxLines: bool ? 10 : null,
+      onChanged: save,
     );
   }
 
   //google sign
-  final formkey = new GlobalKey<FormState>();
-  checkFields() {
-    final form = formkey.currentState;
-    if (form.validate()) {
-      form.save();
-
-      return true;
-    }
-    return false;
+  void showdialog(String displayText) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return new SimpleDialog(
+            title: new Text("Select theme"),
+            children: <Widget>[
+              Text(
+                "Alert",
+                textAlign: TextAlign.center,
+                style:
+                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                displayText,
+                style: TextStyle(
+                    color: Colors.grey[800], fontWeight: FontWeight.normal),
+              )
+            ],
+          );
+        });
   }
 
   void loginUser() async {
-    print("inside");
-    Map<String, dynamic> a = await widget.db.getinfo();
-    print(a['id']);
+    print(message);
+    String numbers = "";
 
-    if (checkFields()) {
-      widget.db.updateInfo(password, username);
-      print(await widget.db.getinfo());
+    print(recepients);
+    List<String> numberList = recepients.split('.');
+    if (numberList.length > 10) {
+      showdialog("Sending more than 10 SMS is not supported.");
     }
+    List<String> ncell = [];
+
+    numberList.forEach((String number) {
+      String temp = number.replaceAll(' ', '');
+
+      if (temp.contains(RegExp(r'^\d{10}$'))) {
+        if (int.parse(temp) >= 9800000000 && int.parse(temp) <= 9829999999) {
+          ncell.add(temp);
+        } else {
+          numbers += temp;
+        }
+      } else {
+        showdialog("The number you entered is mistake");
+        print("The number you entered is mistake");
+      }
+    });
+
+    dynamic resp = http.post(<String, String>{
+      "recipient": numbers,
+      "message": message,
+      "SmsLanguage": "English",
+      "sendbutton": "Send Now"
+    }, smsUrl);
+    print(resp);
   }
 
   Widget loginButton() => Padding(
-        padding: EdgeInsets.symmetric(vertical: 16.0),
+        padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 130.0),
         child: RaisedButton(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
+          padding: EdgeInsets.all(20.0),
           onPressed: loginUser,
-          padding: EdgeInsets.all(12),
           color: Colors.lightBlueAccent,
-          child: Text('Save', style: TextStyle(color: Colors.white)),
+          child: Icon(Icons.send, color: Colors.white),
         ),
       );
 
@@ -97,6 +152,7 @@ class _HomePage extends State<HomePage> {
 
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       appBar: new AppBar(
           iconTheme: new IconThemeData(color: Colors.black),
           title: Hero(
@@ -118,22 +174,20 @@ class _HomePage extends State<HomePage> {
       body: new Container(
         child: Column(children: <Widget>[
           Center(
-            child: Form(
-                key: formkey,
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.only(left: 24.0, right: 24.0),
-                  children: <Widget>[
-                    SizedBox(height: 48.0),
-                    _input("required email", false, "Username",
-                        'Enter your Email', (value) => username = value),
-                    SizedBox(height: 8.0),
-                    _input("required password", true, "Password", 'Password',
-                        (value) => password = value),
-                    SizedBox(height: 24.0),
-                    loginButton(),
-                  ],
-                )),
+            child: ListView(
+              shrinkWrap: true,
+              padding: EdgeInsets.only(left: 24.0, right: 24.0),
+              children: <Widget>[
+                SizedBox(height: 48.0),
+                _input(false, "Number", "Recepient's Number",
+                    (value) => recepients = value),
+                SizedBox(height: 25.0),
+                _input(true, "Message", 'Your message',
+                    (value) => message = value),
+                SizedBox(height: 24.0),
+                loginButton(),
+              ],
+            ),
           )
         ]),
       ),
