@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meetsms_app/databaseClient.dart';
+import 'dart:async';
 
 class Settings extends StatefulWidget {
   DatabaseClient db;
@@ -12,21 +13,22 @@ class Settings extends StatefulWidget {
 }
 
 class _settingState extends State<Settings> {
-  var isLoading = false;
   var selected = 0;
   String username;
   String password;
   Map<String, dynamic> userInfo;
+  bool isLoading = true;
 
   void initState() {
     super.initState();
-    getdata();
+    Timer(Duration(milliseconds: 100), getdata);
   }
 
   void getdata() async {
     userInfo = await widget.db.getinfo();
     setState(() {
       userInfo = userInfo;
+      isLoading = false;
     });
   }
 
@@ -90,28 +92,32 @@ class _settingState extends State<Settings> {
       appBar: new AppBar(
         title: new Text("Settings"),
       ),
-      body: new Container(
-        child: Column(children: <Widget>[
-          Center(
-            child: Form(
-                key: formkey,
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.only(left: 24.0, right: 24.0),
-                  children: <Widget>[
-                    SizedBox(height: 48.0),
-                    _input("required email", false, "Username",
-                        'Enter your Email', (value) => username = value),
-                    SizedBox(height: 8.0),
-                    _input("required password", true, "Password", 'Password',
-                        (value) => password = value),
-                    SizedBox(height: 24.0),
-                    loginButton(),
-                  ],
-                )),
-          )
-        ]),
-      ),
+      body: isLoading
+          ? new Center(
+              child: new CircularProgressIndicator(),
+            )
+          : new Container(
+              child: Column(children: <Widget>[
+                Center(
+                  child: Form(
+                      key: formkey,
+                      child: ListView(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.only(left: 24.0, right: 24.0),
+                        children: <Widget>[
+                          SizedBox(height: 48.0),
+                          _input("required email", false, "Username",
+                              'Enter your Email', (value) => username = value),
+                          SizedBox(height: 8.0),
+                          _input("required password", true, "Password",
+                              'Password', (value) => password = value),
+                          SizedBox(height: 24.0),
+                          loginButton(),
+                        ],
+                      )),
+                )
+              ]),
+            ),
     );
   }
 }
