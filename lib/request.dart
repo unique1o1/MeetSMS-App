@@ -11,11 +11,15 @@ class Session {
     return json.decode(response.body);
   }
 
-  Future<Map> post(Map<String, String> data, String url,
+  Future<dynamic> post(Map<String, String> data, String url,
       {bool cookieBool: false}) async {
     http.Response response = await http.post(url, body: data, headers: headers);
-    if (cookieBool) updateCookie(response);
-    return json.decode(response.body);
+    if (cookieBool) {
+      print("updateing cookied");
+
+      updateCookie(response);
+    }
+    return response.body;
   }
 
   void updateCookie(http.Response response) {

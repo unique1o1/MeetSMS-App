@@ -61,8 +61,7 @@ class Page extends State<MyApp> {
 
   void getinfo() async {
     db = DatabaseClient();
-
-    db.create();
+    await db.create();
 
     var pref = await SharedPreferences.getInstance();
     val = pref.getBool("gotinfo");
@@ -73,6 +72,7 @@ class Page extends State<MyApp> {
 
   void initState() {
     super.initState();
+
     Timer(Duration(seconds: 1), getinfo);
   }
 
