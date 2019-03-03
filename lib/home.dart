@@ -29,12 +29,17 @@ class _HomePage extends State<HomePage> {
   }
 
   void initialRequest() async {
-    Map<String, dynamic> userInfo = await widget.db.getinfo();
+    print('getting cookie');
 
-    http.post(<String, String>{
+    Map<String, dynamic> userInfo = await widget.db.getinfo();
+    print(userInfo['username']);
+    print(userInfo['password']);
+
+    var a = http.post(<String, String>{
       "username": userInfo['username'],
       "password": userInfo['password'],
     }, loginUrl, cookieBool: true);
+    print(a);
   }
 
   Widget _input(bool, String label, String hint, Function save) {
@@ -59,62 +64,86 @@ class _HomePage extends State<HomePage> {
     showDialog(
         context: context,
         builder: (context) {
-          return new SimpleDialog(
-            title: new Text("Select theme"),
-            children: <Widget>[
-              Text(
-                "Alert",
-                textAlign: TextAlign.center,
-                style:
-                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          return new AlertDialog(
+            title: new Text(
+              "Alert",
+              textAlign: TextAlign.center,
+              style:
+                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            ),
+            content: Text(
+              displayText,
+              style: TextStyle(
+                  color: Colors.grey[800], fontWeight: FontWeight.normal),
+            ),
+            actions: <Widget>[
+              // usually buttons at the bottom of the dialog
+              new FlatButton(
+                child: new Text("Ok"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
               ),
-              Text(
-                displayText,
-                style: TextStyle(
-                    color: Colors.grey[800], fontWeight: FontWeight.normal),
-              )
             ],
           );
         });
   }
 
+  void showsnackbar(String displayText) {
+    SnackBar snackbar = SnackBar(
+      content: Text(displayText),
+      duration: Duration(milliseconds: 5000),
+    );
+    mainKey.currentState.showSnackBar(snackbar);
+  }
+
   void loginUser() async {
-    print(message);
+    if (message == null && recepients == null) {
+      showsnackbar(message == null
+          ? "Message field is empty"
+          : "Numbers field is empty");
+    }
     String numbers = "";
 
     print(recepients);
-    List<String> numberList = recepients.split('.');
+    List<String> numberList = recepients.split(',');
     if (numberList.length > 10) {
       showdialog("Sending more than 10 SMS is not supported.");
     }
     String ncell = "";
+    String WrongNumbers = "";
 
     numberList.forEach((String number) {
       String temp = number.replaceAll(' ', '');
-      if (temp.contains(RegExp(r'^\d{10}$'))) {
-        if (int.parse(temp) >= 9800000000 && int.parse(temp) <= 9829999999) {
-          ncell += temp;
-        } else {
-          numbers += temp;
-        }
+      if (temp.contains(RegExp(r'^\d{10}$')) &&
+          temp.contains(RegExp(r'^(984)|(985)|(986)'))) {
+        numbers += numbers.isEmpty ? temp : "," + temp;
+      } else if (temp.contains(RegExp(r'^\d{10}$')) &&
+          temp.contains(RegExp(r'^(980)|(981)|(982)'))) {
+        ncell += ncell.isEmpty ? temp : "," + temp;
       } else {
-        showdialog("The number you entered is mistake");
-        print("The number you entered is mistake");
+        WrongNumbers += WrongNumbers.isEmpty ? temp : "," + temp;
       }
     });
-    SnackBar snackbar = SnackBar(
-      content: Text(
-          "SMS to $ncell was not send because Ncell numbers are not supported"),
-      duration: Duration(milliseconds: 3000),
-    );
-    mainKey.currentState.showSnackBar(snackbar);
-    dynamic resp = http.post(<String, String>{
+    if (WrongNumbers.isNotEmpty) {
+      showsnackbar(
+          "SMS to $WrongNumbers was not send because these numbers are  wrong");
+    }
+    if (ncell.isNotEmpty) {
+      showsnackbar(
+          "SMS to $ncell was not send because Ncell numbers are not supported");
+    }
+    print('entered number $numbers');
+
+    dynamic resp = await http.post(<String, String>{
       "recipient": numbers,
       "message": message,
       "SmsLanguage": "English",
       "sendbutton": "Send Now"
     }, smsUrl);
+
     print(resp);
+    showdialog("""Message was send to the following numbers:$numbers""");
   }
 
   Widget loginButton() => Padding(
