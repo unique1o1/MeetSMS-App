@@ -14,8 +14,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePage extends State<HomePage> {
-  String message;
-  String recepients;
+  String message = '';
+  String recepients = '';
   Session http = Session();
 
   final mainKey = GlobalKey<ScaffoldState>();
@@ -36,11 +36,14 @@ class _HomePage extends State<HomePage> {
     print(userInfo['username']);
     print(userInfo['password']);
 
-    var a = http.post(<String, String>{
+    int resp = await http.post(<String, String>{
       "username": userInfo['username'],
       "password": userInfo['password'],
     }, loginUrl, cookieBool: true);
-    print(a);
+    if (resp == 302)
+      showsnackbar("""Logged in successfully""");
+    else
+      showdialog("""$resp Errored when logging in""");
   }
 
   Widget _input(bool, String label, String hint, Function save) {
@@ -99,58 +102,63 @@ class _HomePage extends State<HomePage> {
   }
 
   void sendMessage() async {
-    setState(() {
-      isSending = true;
-    });
-    if (message == null && recepients == null) {
-      showsnackbar(message == null
+    if (message.isEmpty && recepients.isEmpty) {
+      showsnackbar(message.isEmpty
           ? "Message field is empty"
           : "Numbers field is empty");
-    }
-    String numbers = "";
+    } else {
+      setState(() {
+        isSending = true;
+      });
+      String numbers = "";
 
-    print(recepients);
-    List<String> numberList = recepients.split(',');
-    if (numberList.length > 10) {
-      showdialog("Sending more than 10 SMS is not supported.");
-    }
-    String ncell = "";
-    String WrongNumbers = "";
-
-    numberList.forEach((String number) {
-      String temp = number.replaceAll(' ', '');
-      if (temp.contains(RegExp(r'^\d{10}$')) &&
-          temp.contains(RegExp(r'^(984)|(985)|(986)'))) {
-        numbers += numbers.isEmpty ? temp : "," + temp;
-      } else if (temp.contains(RegExp(r'^\d{10}$')) &&
-          temp.contains(RegExp(r'^(980)|(981)|(982)'))) {
-        ncell += ncell.isEmpty ? temp : "," + temp;
-      } else {
-        WrongNumbers += WrongNumbers.isEmpty ? temp : "," + temp;
+      print(recepients);
+      List<String> numberList = recepients.split(',');
+      if (numberList.length > 10) {
+        showdialog("Sending more than 10 SMS is not supported.");
       }
-    });
-    if (WrongNumbers.isNotEmpty) {
-      showsnackbar(
-          "SMS to $WrongNumbers was not send because these numbers are  wrong");
-    }
-    if (ncell.isNotEmpty) {
-      showsnackbar(
-          "SMS to $ncell was not send because Ncell numbers are not supported");
-    }
-    print('entered number $numbers');
+      String ncell = "";
+      String WrongNumbers = "";
 
-    dynamic resp = await http.post(<String, String>{
-      "recipient": numbers,
-      "message": message,
-      "SmsLanguage": "English",
-      "sendbutton": "Send Now"
-    }, smsUrl);
+      numberList.forEach((String number) {
+        String temp = number.replaceAll(' ', '');
+        if (temp.contains(RegExp(r'^\d{10}$')) &&
+            temp.contains(RegExp(r'^(984)|(985)|(986)'))) {
+          numbers += numbers.isEmpty ? temp : "," + temp;
+        } else if (temp.contains(RegExp(r'^\d{10}$')) &&
+            temp.contains(RegExp(r'^(980)|(981)|(982)'))) {
+          ncell += ncell.isEmpty ? temp : "," + temp;
+        } else {
+          WrongNumbers += WrongNumbers.isEmpty ? temp : "," + temp;
+        }
+      });
+      if (WrongNumbers.isNotEmpty) {
+        showsnackbar(
+            "SMS to $WrongNumbers was not send because these numbers are  wrong");
+      }
+      if (ncell.isNotEmpty) {
+        showsnackbar(
+            "SMS to $ncell was not send because Ncell numbers are not supported");
+      }
+      print('entered number $numbers');
 
-    print(resp);
-    setState(() {
-      isSending = false;
-    });
-    showdialog("""Message was send to the following numbers:$numbers""");
+      int resp = await http.post(<String, String>{
+        "recipient": numbers,
+        "message": message,
+        "SmsLanguage": "English",
+        "sendbutton": "Send Now"
+      }, smsUrl);
+      print('this is statsucode');
+
+      print(resp);
+      setState(() {
+        isSending = false;
+      });
+      if (resp == 302)
+        showdialog("""Message was send to the following numbers:$numbers""");
+      else
+        showdialog("""$resp Errored when sending message""");
+    }
   }
 
   Widget loginButton() => Padding(
@@ -162,11 +170,14 @@ class _HomePage extends State<HomePage> {
           padding: EdgeInsets.all(20.0),
           onPressed: sendMessage,
           color: Colors.lightBlueAccent,
-          child: !isSending
-              ? Icon(Icons.send, color: Colors.white)
-              : Center(
-                  child: CircularProgressIndicator(),
-                ),
+          child: SizedBox(
+              height: 40.0,
+              width: 80.0,
+              child: Center(
+                child: !isSending
+                    ? Icon(Icons.send, color: Colors.white)
+                    : CircularProgressIndicator(),
+              )),
         ),
       );
 
