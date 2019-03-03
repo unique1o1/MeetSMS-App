@@ -47,8 +47,6 @@ class DatabaseClient {
   Future<int> getEpoch() async {
     List<Map<String, dynamic>> results =
         await db.rawQuery("select * from resettime limit 1");
-    print("thi s it is ");
-    print(results);
 
     return results[0]['epoch'];
   }

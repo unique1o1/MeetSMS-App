@@ -120,14 +120,11 @@ class _HomePage extends State<HomePage> {
   }
 
   void sendMessage() async {
-    if (message.isEmpty && recepients.isEmpty) {
+    if (message.isEmpty || recepients.isEmpty) {
       showsnackbar(message.isEmpty
           ? "Message field is empty"
           : "Numbers field is empty");
     } else {
-      setState(() {
-        isSending = true;
-      });
       String numbers = "";
 
       List<String> numberList = recepients.split(',');
@@ -157,26 +154,30 @@ class _HomePage extends State<HomePage> {
         showsnackbar(
             "SMS to $ncell was not send because Ncell numbers are not supported");
       }
-
-      int resp = await http.post(<String, String>{
-        "recipient": numbers,
-        "message": message,
-        "SmsLanguage": "English",
-        "sendbutton": "Send Now"
-      }, smsUrl);
-      setState(() {
-        isSending = false;
-      });
-      if (resp == 302) {
-        showdialog("""Message was send to the following numbers:$numbers""");
-        quota += numbers.split(',').length;
-
-        widget.db.updateQuota(quota);
+      if (numbers.isNotEmpty) {
         setState(() {
-          quota = quota;
+          isSending = true;
         });
-      } else
-        showdialog("""$resp Errored when sending message""");
+        int resp = await http.post(<String, String>{
+          "recipient": numbers,
+          "message": message,
+          "SmsLanguage": "English",
+          "sendbutton": "Send Now"
+        }, smsUrl);
+        setState(() {
+          isSending = false;
+        });
+        if (resp == 302) {
+          showdialog("""Message was send to the following numbers:$numbers""");
+          quota += numbers.split(',').length;
+
+          widget.db.updateQuota(quota);
+          setState(() {
+            quota = quota;
+          });
+        } else
+          showdialog("""$resp Errored when sending message""");
+      }
     }
   }
 
@@ -229,7 +230,7 @@ class _HomePage extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: mainKey,
-      resizeToAvoidBottomPadding: false,
+      resizeToAvoidBottomInset: false,
       appBar: new AppBar(
           iconTheme: new IconThemeData(color: Colors.black),
           title: Hero(
@@ -275,7 +276,8 @@ class _HomePage extends State<HomePage> {
             ),
           ),
           Center(
-            child: ListView(
+            child: Form(
+                child: ListView(
               shrinkWrap: true,
               padding: EdgeInsets.only(left: 24.0, right: 24.0),
               children: <Widget>[
@@ -288,7 +290,7 @@ class _HomePage extends State<HomePage> {
                 SizedBox(height: 24.0),
                 loginButton(),
               ],
-            ),
+            )),
           )
         ]),
       ),

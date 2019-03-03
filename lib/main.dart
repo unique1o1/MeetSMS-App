@@ -24,7 +24,7 @@ class Page extends State<MyApp> {
     return Scaffold(
         body: Stack(fit: StackFit.expand, children: <Widget>[
       Container(
-        decoration: BoxDecoration(color: Colors.redAccent),
+        decoration: BoxDecoration(color: Colors.blue[700]),
       ),
       Column(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
         Expanded(
@@ -36,16 +36,22 @@ class Page extends State<MyApp> {
                 CircleAvatar(
                   backgroundColor: Colors.white,
                   radius: 50.0,
-                  child: Image.asset(
-                    "images/watch.png",
-                    fit: BoxFit.fitWidth,
-                  ),
+                  child: new ClipRRect(
+                      borderRadius: new BorderRadius.circular(20.0),
+                      child: Image(
+                        image: AssetImage(
+                          "images/icon.png",
+                        ),
+                        colorBlendMode: BlendMode.color,
+                        height: 60.0,
+                        fit: BoxFit.contain,
+                      )),
                 ),
                 Padding(
                   padding: EdgeInsets.only(top: 10.0),
                 ),
                 Text(
-                  "Spectra",
+                  "MeetSMS",
                   style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
