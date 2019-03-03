@@ -17,6 +17,8 @@ class _HomePage extends State<HomePage> {
   String message;
   String recepients;
   Session http = Session();
+
+  final mainKey = GlobalKey<ScaffoldState>();
   String loginUrl = "http://www.meet.net.np/meet/action/login";
 
   String smsUrl = "http://www.meet.net.np/meet/mod/sms/actions/send.php";
@@ -85,14 +87,13 @@ class _HomePage extends State<HomePage> {
     if (numberList.length > 10) {
       showdialog("Sending more than 10 SMS is not supported.");
     }
-    List<String> ncell = [];
+    String ncell = "";
 
     numberList.forEach((String number) {
       String temp = number.replaceAll(' ', '');
-
       if (temp.contains(RegExp(r'^\d{10}$'))) {
         if (int.parse(temp) >= 9800000000 && int.parse(temp) <= 9829999999) {
-          ncell.add(temp);
+          ncell += temp;
         } else {
           numbers += temp;
         }
@@ -101,7 +102,12 @@ class _HomePage extends State<HomePage> {
         print("The number you entered is mistake");
       }
     });
-
+    SnackBar snackbar = SnackBar(
+      content: Text(
+          "SMS to $ncell was not send because Ncell numbers are not supported"),
+      duration: Duration(milliseconds: 3000),
+    );
+    mainKey.currentState.showSnackBar(snackbar);
     dynamic resp = http.post(<String, String>{
       "recipient": numbers,
       "message": message,
@@ -152,6 +158,7 @@ class _HomePage extends State<HomePage> {
 
   Widget build(BuildContext context) {
     return Scaffold(
+      key: mainKey,
       resizeToAvoidBottomPadding: false,
       appBar: new AppBar(
           iconTheme: new IconThemeData(color: Colors.black),
