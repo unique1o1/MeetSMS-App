@@ -19,6 +19,14 @@ class _settingState extends State<Settings> {
   Map<String, dynamic> userInfo;
   bool isLoading = true;
 
+  void showsnackbar(String displayText) {
+    SnackBar snackbar = SnackBar(
+      content: Text(displayText),
+      duration: Duration(milliseconds: 5000),
+    );
+    scaffoldState.currentState.showSnackBar(snackbar);
+  }
+
   void initState() {
     super.initState();
     Timer(Duration(milliseconds: 100), getdata);
@@ -48,7 +56,6 @@ class _settingState extends State<Settings> {
     );
   }
 
-  //google sign
   final formkey = new GlobalKey<FormState>();
   checkFields() {
     final form = formkey.currentState;
@@ -61,12 +68,10 @@ class _settingState extends State<Settings> {
   }
 
   void loginUser() async {
-    print("inside");
-    Map<String, dynamic> a = await widget.db.getinfo();
-    print(a['id']);
-
     if (checkFields()) {
       widget.db.updateInfo(password, username);
+      showsnackbar("Please restart the app for the changes to take effect");
+
       print(await widget.db.getinfo());
     }
   }
