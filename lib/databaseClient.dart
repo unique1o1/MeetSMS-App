@@ -9,13 +9,55 @@ class DatabaseClient {
   Future create() async {
     Directory path = await getApplicationDocumentsDirectory();
     String dbpath = join(path.path, "database.db");
-    db = await openDatabase(dbpath, version: 1, onCreate: this._create);
+    db = await openDatabase(dbpath, version: 2, onCreate: this._create);
   }
 
   Future _create(Database _db, int version) async {
     await _db.execute("""
     CREATE TABLE user(id integer primary key autoincrement,username TEXT NOT NULL,password TEXT NOT NULL)
     """);
+    await _db.execute("""
+    CREATE TABLE resettime(id integer primary key autoincrement,epoch integer NOT NULL default 1551622693421,quota integer NOT NULL default 0)
+    """);
+  }
+
+  void updateEpoch() async {
+    await db.update(
+        "resettime",
+        <String, dynamic>{
+          'epoch': DateTime.now().millisecondsSinceEpoch,
+          'quota': 0
+        },
+        where: "id= ?",
+        whereArgs: [1]);
+  }
+
+  void updateQuota(int quota) async {
+    await db.update("resettime", <String, dynamic>{'quota': quota},
+        where: "id= ?", whereArgs: [1]);
+  }
+
+  Future<int> getQuota() async {
+    List<Map<String, dynamic>> results =
+        await db.rawQuery("select * from resettime limit 1");
+
+    return results[0]['quota'];
+  }
+
+  Future<int> getEpoch() async {
+    List<Map<String, dynamic>> results =
+        await db.rawQuery("select * from resettime limit 1");
+    print("thi s it is ");
+    print(results);
+
+    return results[0]['epoch'];
+  }
+
+  void insertResetTime() async {
+    await db.insert("resettime", <String, dynamic>{
+      'epoch': DateTime.now().millisecondsSinceEpoch,
+      'quota': 0
+    });
   }
 
   void insertInfo(String password, String username) async {
@@ -25,7 +67,7 @@ class DatabaseClient {
 
   void updateInfo(String password, String username) async {
     await db.update(
-        "songs", <String, dynamic>{'username': username, 'password': password},
+        "user", <String, dynamic>{'username': username, 'password': password},
         where: "id= ?", whereArgs: [1]);
   }
 
