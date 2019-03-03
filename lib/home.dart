@@ -22,6 +22,7 @@ class _HomePage extends State<HomePage> {
   String loginUrl = "http://www.meet.net.np/meet/action/login";
 
   String smsUrl = "http://www.meet.net.np/meet/mod/sms/actions/send.php";
+  bool isSending = false;
 
   void initState() {
     super.initState();
@@ -97,7 +98,10 @@ class _HomePage extends State<HomePage> {
     mainKey.currentState.showSnackBar(snackbar);
   }
 
-  void loginUser() async {
+  void sendMessage() async {
+    setState(() {
+      isSending = true;
+    });
     if (message == null && recepients == null) {
       showsnackbar(message == null
           ? "Message field is empty"
@@ -143,6 +147,9 @@ class _HomePage extends State<HomePage> {
     }, smsUrl);
 
     print(resp);
+    setState(() {
+      isSending = false;
+    });
     showdialog("""Message was send to the following numbers:$numbers""");
   }
 
@@ -153,9 +160,13 @@ class _HomePage extends State<HomePage> {
             borderRadius: BorderRadius.circular(24),
           ),
           padding: EdgeInsets.all(20.0),
-          onPressed: loginUser,
+          onPressed: sendMessage,
           color: Colors.lightBlueAccent,
-          child: Icon(Icons.send, color: Colors.white),
+          child: !isSending
+              ? Icon(Icons.send, color: Colors.white)
+              : Center(
+                  child: CircularProgressIndicator(),
+                ),
         ),
       );
 
