@@ -19,7 +19,7 @@ class Session {
 
       updateCookie(response);
     }
-    return response.body;
+    return response.statusCode;
   }
 
   void updateCookie(http.Response response) {

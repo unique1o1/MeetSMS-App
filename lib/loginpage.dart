@@ -61,6 +61,8 @@ class _LoginPageSate extends State<LoginPage> {
 
     if (checkFields()) {
       widget.db.insertInfo(password, username);
+      widget.db.insertResetTime();
+
       Map<String, dynamic> a = await widget.db.getinfo();
       print(a['username']);
 
