@@ -23,10 +23,28 @@ class _HomePage extends State<HomePage> {
 
   String smsUrl = "http://www.meet.net.np/meet/mod/sms/actions/send.php";
   bool isSending = false;
+  int quota = 0;
 
   void initState() {
     super.initState();
     initialRequest();
+    initialQuota();
+  }
+
+  void initialQuota() async {
+    int value = await widget.db.getEpoch();
+    value = DateTime.fromMillisecondsSinceEpoch(value).day - DateTime.now().day;
+
+    if (value < 0) {
+      widget.db
+          .updateEpoch(); //update epoch if more than a day has gone by which also updats the quota
+    } else {
+      quota = await widget.db.getQuota();
+
+      setState(() {
+        quota = quota;
+      });
+    }
   }
 
   void initialRequest() async {
@@ -41,9 +59,9 @@ class _HomePage extends State<HomePage> {
       "password": userInfo['password'],
     }, loginUrl, cookieBool: true);
     if (resp == 302)
-      showsnackbar("""Logged in successfully""");
+      showsnackbar("""Pinging NTC server successfull """);
     else
-      showdialog("""$resp Errored when logging in""");
+      showdialog("""$resp Errored when contacting the server""");
   }
 
   Widget _input(bool, String label, String hint, Function save) {
@@ -112,7 +130,6 @@ class _HomePage extends State<HomePage> {
       });
       String numbers = "";
 
-      print(recepients);
       List<String> numberList = recepients.split(',');
       if (numberList.length > 10) {
         showdialog("Sending more than 10 SMS is not supported.");
@@ -140,7 +157,6 @@ class _HomePage extends State<HomePage> {
         showsnackbar(
             "SMS to $ncell was not send because Ncell numbers are not supported");
       }
-      print('entered number $numbers');
 
       int resp = await http.post(<String, String>{
         "recipient": numbers,
@@ -148,15 +164,18 @@ class _HomePage extends State<HomePage> {
         "SmsLanguage": "English",
         "sendbutton": "Send Now"
       }, smsUrl);
-      print('this is statsucode');
-
-      print(resp);
       setState(() {
         isSending = false;
       });
-      if (resp == 302)
+      if (resp == 302) {
         showdialog("""Message was send to the following numbers:$numbers""");
-      else
+        quota += numbers.split(',').length;
+
+        widget.db.updateQuota(quota);
+        setState(() {
+          quota = quota;
+        });
+      } else
         showdialog("""$resp Errored when sending message""");
     }
   }
@@ -231,6 +250,30 @@ class _HomePage extends State<HomePage> {
       drawer: drawerSidebar(),
       body: new Container(
         child: Column(children: <Widget>[
+          Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  "Quota",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(width: 5.0),
+                Container(
+                  width: 30.0,
+                  height: 20.0,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25.0),
+                      border: Border.all(color: Colors.grey[350], width: 1.0)),
+                  child: Text(
+                    quota.toString(),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              ],
+            ),
+          ),
           Center(
             child: ListView(
               shrinkWrap: true,
