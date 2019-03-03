@@ -42,8 +42,20 @@ class _HomePage extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: new AppBar(
-        title: new Text("Meet SMS"),
-      ),
+          iconTheme: new IconThemeData(color: Colors.black),
+          title: new ClipRRect(
+              borderRadius: new BorderRadius.circular(20.0),
+              child: Image(
+                image: AssetImage(
+                  "images/icon.png",
+                ),
+                colorBlendMode: BlendMode.color,
+                height: 40.0,
+                fit: BoxFit.fitHeight,
+              )),
+          elevation: 0.0,
+          centerTitle: true,
+          backgroundColor: Colors.transparent),
       drawer: drawerSidebar(),
       body: Text('rasdf'),
     );
