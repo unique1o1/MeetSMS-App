@@ -34,7 +34,7 @@ class Page extends State<MyApp> {
   void initState() {
     super.initState();
 
-    Timer(Duration(seconds: 1), getinfo);
+    getinfo();
   }
 
   Widget build(BuildContext context) {
