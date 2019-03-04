@@ -20,51 +20,6 @@ class Page extends State<MyApp> {
   bool val;
   DatabaseClient db;
 
-  Widget splashscreen() {
-    return Scaffold(
-        body: Stack(fit: StackFit.expand, children: <Widget>[
-      Container(
-        decoration: BoxDecoration(color: Colors.blue[700]),
-      ),
-      Column(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
-        Expanded(
-          flex: 2,
-          child: Container(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 50.0,
-                  child: new ClipRRect(
-                      borderRadius: new BorderRadius.circular(20.0),
-                      child: Image(
-                        image: AssetImage(
-                          "images/icon.png",
-                        ),
-                        colorBlendMode: BlendMode.color,
-                        height: 60.0,
-                        fit: BoxFit.contain,
-                      )),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 10.0),
-                ),
-                Text(
-                  "MeetSMS",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24.0),
-                )
-              ],
-            ),
-          ),
-        )
-      ])
-    ]));
-  }
-
   void getinfo() async {
     db = DatabaseClient();
     await db.create();
@@ -88,7 +43,9 @@ class Page extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
       home: isLoading
-          ? splashscreen()
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
           : val ?? false ? HomePage(db) : LoginPage(db),
     );
   }
