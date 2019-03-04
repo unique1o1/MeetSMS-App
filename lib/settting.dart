@@ -69,10 +69,12 @@ class _settingState extends State<Settings> {
 
   void loginUser() async {
     if (checkFields()) {
-      widget.db.updateInfo(password, username);
-      showsnackbar("Please restart the app for the changes to take effect");
-
-      print(await widget.db.getinfo());
+      Map<String, dynamic> s = await widget.db.getinfo();
+      if (s['username'] != username) {
+        widget.db.updateInfo(password, username);
+        widget.db.updateQuota(0);
+        showsnackbar("Please restart the app for the changes to take effect");
+      }
     }
   }
 
