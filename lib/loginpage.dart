@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meetsms_app/databaseClient.dart';
 import 'package:meetsms_app/home.dart';
+import 'package:meetsms_app/request.dart';
 
 class LoginPage extends StatefulWidget {
   DatabaseClient db;
@@ -15,6 +16,11 @@ class LoginPage extends StatefulWidget {
 class _LoginPageSate extends State<LoginPage> {
   String username;
   String password;
+  bool isSending = false;
+
+  Session http = Session();
+  String loginUrl = "http://www.meet.net.np/meet/action/login";
+  final mainKey = GlobalKey<ScaffoldState>();
 
   final logo = Hero(
       tag: 'hero',
@@ -45,6 +51,14 @@ class _LoginPageSate extends State<LoginPage> {
     );
   }
 
+  void showsnackbar(String displayText) {
+    SnackBar snackbar = SnackBar(
+      content: Text(displayText),
+      duration: Duration(milliseconds: 5000),
+    );
+    mainKey.currentState.showSnackBar(snackbar);
+  }
+
   //google sign
   final formkey = new GlobalKey<FormState>();
   checkFields() {
@@ -58,20 +72,38 @@ class _LoginPageSate extends State<LoginPage> {
 
   void loginUser() async {
     print("inside");
-
+    setState(() {
+      isSending = true;
+    });
     if (checkFields()) {
-      widget.db.insertInfo(password, username);
-      widget.db.insertResetTime();
+      String cookie = await http.post(<String, dynamic>{
+        'username': username,
+        'password': password,
+        'persistent': "true",
+      }, loginUrl, cookieBool: true);
+      if (cookie != null) {
+        widget.db.insertInfo(password, username, cookie);
 
-      Map<String, dynamic> a = await widget.db.getinfo();
-      print(a['username']);
+        widget.db.insertResetTime();
 
-      var pref = await SharedPreferences.getInstance();
-      pref.setBool("gotinfo", true);
-      Navigator.of(context)
-          .pushReplacement(new MaterialPageRoute(builder: (context) {
-        return new HomePage(widget.db);
-      }));
+        Map<String, dynamic> a = await widget.db.getinfo();
+        print(a['username']);
+
+        var pref = await SharedPreferences.getInstance();
+        pref.setBool("gotinfo", true);
+        setState(() {
+          isSending = false;
+        });
+        Navigator.of(context)
+            .pushReplacement(new MaterialPageRoute(builder: (context) {
+          return new HomePage(widget.db);
+        }));
+      } else {
+        setState(() {
+          isSending = false;
+        });
+        showsnackbar("Username/ Password you entered is mistake");
+      }
     }
   }
 
@@ -84,7 +116,9 @@ class _LoginPageSate extends State<LoginPage> {
           onPressed: loginUser,
           padding: EdgeInsets.all(12),
           color: Colors.lightBlueAccent,
-          child: Text('Log In', style: TextStyle(color: Colors.white)),
+          child: !isSending
+              ? Text('Log In', style: TextStyle(color: Colors.white))
+              : CircularProgressIndicator(),
         ),
       );
 
@@ -92,6 +126,7 @@ class _LoginPageSate extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      key: mainKey,
       body: Center(
         child: Form(
             key: formkey,

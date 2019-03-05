@@ -14,7 +14,7 @@ class DatabaseClient {
 
   Future _create(Database _db, int version) async {
     await _db.execute("""
-    CREATE TABLE user(id integer primary key autoincrement,username TEXT NOT NULL,password TEXT NOT NULL)
+    CREATE TABLE user(id integer primary key autoincrement,username TEXT NOT NULL,password TEXT NOT NULL,cookie TEXT NOT NULL)
     """);
     await _db.execute("""
     CREATE TABLE resettime(id integer primary key autoincrement,epoch integer NOT NULL default 1551622693421,quota integer NOT NULL default 0)
@@ -51,6 +51,12 @@ class DatabaseClient {
     return results[0]['epoch'];
   }
 
+  Future<String> getcookie() async {
+    List<Map<String, dynamic>> results =
+        await db.rawQuery("select * from user limit 1");
+    return results[0]['cookie'];
+  }
+
   void insertResetTime() async {
     await db.insert("resettime", <String, dynamic>{
       'epoch': DateTime.now().millisecondsSinceEpoch,
@@ -58,15 +64,24 @@ class DatabaseClient {
     });
   }
 
-  void insertInfo(String password, String username) async {
-    await db.insert(
-        "user", <String, String>{'username': username, 'password': password});
+  void insertInfo(String password, String username, String cookie) async {
+    await db.insert("user", <String, String>{
+      'username': username,
+      'password': password,
+      'cookie': cookie
+    });
   }
 
-  void updateInfo(String password, String username) async {
+  void updateInfo(String password, String username, String cookie) async {
     await db.update(
-        "user", <String, dynamic>{'username': username, 'password': password},
-        where: "id= ?", whereArgs: [1]);
+        "user",
+        <String, dynamic>{
+          'username': username,
+          'password': password,
+          'cookie': cookie
+        },
+        where: "id= ?",
+        whereArgs: [1]);
   }
 
   Future<Map<String, dynamic>> getinfo() async {

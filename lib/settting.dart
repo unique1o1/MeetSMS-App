@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meetsms_app/databaseClient.dart';
 import 'dart:async';
+import 'package:meetsms_app/request.dart';
 
 class Settings extends StatefulWidget {
   DatabaseClient db;
@@ -15,9 +16,13 @@ class Settings extends StatefulWidget {
 class _settingState extends State<Settings> {
   var selected = 0;
   String username;
+  String loginUrl = "http://www.meet.net.np/meet/action/login";
+
   String password;
   Map<String, dynamic> userInfo;
   bool isLoading = true;
+  Session http = Session();
+  bool isSending = false;
 
   void showsnackbar(String displayText) {
     SnackBar snackbar = SnackBar(
@@ -71,9 +76,27 @@ class _settingState extends State<Settings> {
     if (checkFields()) {
       Map<String, dynamic> s = await widget.db.getinfo();
       if (s['username'] != username) {
-        widget.db.updateInfo(password, username);
-        widget.db.updateQuota(0);
-        showsnackbar("Please restart the app for the changes to take effect");
+        setState(() {
+          isSending = true;
+        });
+        String cookie = await http.post(<String, dynamic>{
+          'username': username,
+          'password': password,
+          'persistent': 'true',
+        }, loginUrl, cookieBool: true);
+        if (cookie != null) {
+          widget.db.updateInfo(password, username, cookie);
+          widget.db.updateQuota(0);
+
+          showsnackbar("You are now logged in");
+        } else {
+          showsnackbar("Username/ Password you entered is mistake");
+        }
+        setState(() {
+          isSending = false;
+        });
+      } else {
+        showsnackbar("You entered the same username");
       }
     }
   }
@@ -87,7 +110,9 @@ class _settingState extends State<Settings> {
           onPressed: loginUser,
           padding: EdgeInsets.all(12),
           color: Colors.lightBlueAccent,
-          child: Text('Save', style: TextStyle(color: Colors.white)),
+          child: !isSending
+              ? Text('Save', style: TextStyle(color: Colors.white))
+              : CircularProgressIndicator(),
         ),
       );
 

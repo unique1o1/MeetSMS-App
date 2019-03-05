@@ -27,7 +27,7 @@ class _HomePage extends State<HomePage> {
 
   void initState() {
     super.initState();
-    initialRequest();
+    // initialRequest();
     initialQuota();
   }
 
@@ -47,22 +47,22 @@ class _HomePage extends State<HomePage> {
     }
   }
 
-  void initialRequest() async {
-    print('getting cookie');
+  // void initialRequest() async {
+  //   print('getting cookie');
 
-    Map<String, dynamic> userInfo = await widget.db.getinfo();
-    print(userInfo['username']);
-    print(userInfo['password']);
+  //   Map<String, dynamic> userInfo = await widget.db.getinfo();
+  //   print(userInfo['username']);
+  //   print(userInfo['password']);
 
-    int resp = await http.post(<String, String>{
-      "username": userInfo['username'],
-      "password": userInfo['password'],
-    }, loginUrl, cookieBool: true);
-    if (resp == 302)
-      showsnackbar("""Pinging NTC server successfull """);
-    else
-      showdialog("""$resp Errored when contacting the server""");
-  }
+  //   int resp = await http.post(<String, String>{
+  //     "username": userInfo['username'],
+  //     "password": userInfo['password'],
+  //   }, loginUrl, cookieBool: true);
+  //   if (resp == 302)
+  //     showsnackbar("""Pinging NTC server successfull """);
+  //   else
+  //     showdialog("""$resp Errored when contacting the server""");
+  // }
 
   Widget _input(bool, String label, String hint, Function save) {
     return new TextField(
@@ -158,12 +158,17 @@ class _HomePage extends State<HomePage> {
         setState(() {
           isSending = true;
         });
-        int resp = await http.post(<String, String>{
-          "recipient": numbers,
-          "message": message,
-          "SmsLanguage": "English",
-          "sendbutton": "Send Now"
-        }, smsUrl);
+        String cookie = await widget.db.getcookie();
+
+        int resp = await http.post(
+            <String, String>{
+              "recipient": numbers,
+              "message": message,
+              "SmsLanguage": "English",
+              "sendbutton": "Send Now"
+            },
+            smsUrl,
+            headers: {'cookie': cookie});
         setState(() {
           isSending = false;
         });
