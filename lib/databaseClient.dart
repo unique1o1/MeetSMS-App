@@ -6,6 +6,8 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseClient {
   Database db;
+  static int quotaStatus = 0;
+
   Future create() async {
     Directory path = await getApplicationDocumentsDirectory();
     String dbpath = join(path.path, "database.db");

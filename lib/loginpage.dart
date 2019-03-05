@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meetsms_app/databaseClient.dart';
 import 'package:meetsms_app/home.dart';
 import 'package:meetsms_app/request.dart';
+import 'package:meetsms_app/snackbar.dart';
 
 class LoginPage extends StatefulWidget {
   DatabaseClient db;
@@ -51,14 +52,6 @@ class _LoginPageSate extends State<LoginPage> {
     );
   }
 
-  void showsnackbar(String displayText) {
-    SnackBar snackbar = SnackBar(
-      content: Text(displayText),
-      duration: Duration(milliseconds: 5000),
-    );
-    mainKey.currentState.showSnackBar(snackbar);
-  }
-
   //google sign
   final formkey = new GlobalKey<FormState>();
   checkFields() {
@@ -102,7 +95,7 @@ class _LoginPageSate extends State<LoginPage> {
         setState(() {
           isSending = false;
         });
-        showsnackbar("Username/ Password you entered is mistake");
+        showsnackbar("Username/ Password you entered is mistake", mainKey);
       }
     }
   }

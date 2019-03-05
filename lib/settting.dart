@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meetsms_app/databaseClient.dart';
 import 'dart:async';
 import 'package:meetsms_app/request.dart';
+import 'package:meetsms_app/snackbar.dart';
 
 class Settings extends StatefulWidget {
   DatabaseClient db;
@@ -23,14 +24,6 @@ class _settingState extends State<Settings> {
   bool isLoading = true;
   Session http = Session();
   bool isSending = false;
-
-  void showsnackbar(String displayText) {
-    SnackBar snackbar = SnackBar(
-      content: Text(displayText),
-      duration: Duration(milliseconds: 5000),
-    );
-    scaffoldState.currentState.showSnackBar(snackbar);
-  }
 
   void initState() {
     super.initState();
@@ -87,16 +80,18 @@ class _settingState extends State<Settings> {
         if (cookie != null) {
           widget.db.updateInfo(password, username, cookie);
           widget.db.updateQuota(0);
+          DatabaseClient.quotaStatus = 0;
 
-          showsnackbar("You are now logged in");
+          showsnackbar("You are now logged in", scaffoldState);
         } else {
-          showsnackbar("Username/ Password you entered is mistake");
+          showsnackbar(
+              "Username/ Password you entered is mistake", scaffoldState);
         }
         setState(() {
           isSending = false;
         });
       } else {
-        showsnackbar("You entered the same username");
+        showsnackbar("You entered the same username", scaffoldState);
       }
     }
   }
