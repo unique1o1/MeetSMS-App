@@ -241,6 +241,7 @@ class _HomePage extends State<HomePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
+                    SizedBox(height: 80.0),
                     Text(
                       "Quota",
                       textAlign: TextAlign.center,
@@ -276,7 +277,7 @@ class _HomePage extends State<HomePage> {
                         (value) => message = value),
                     SizedBox(height: 24.0),
                     loginButton(),
-                    SizedBox(height: 170.0),
+                    SizedBox(height: 112.0),
                   ],
                 )),
               )
