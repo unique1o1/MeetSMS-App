@@ -15,23 +15,24 @@ class Offline extends StatelessWidget {
         Widget child,
       ) {
         final bool connected = connectivity != ConnectivityResult.none;
-        return new Stack(
-          fit: StackFit.expand,
+        return new Container(
+            child: Column(
           children: [
-            Positioned(
-              height: 24.0,
-              left: 0.0,
-              right: 0.0,
-              child: Container(
-                color: connected ? Color(0xFF00EE44) : Color(0xFFEE4400),
-                child: Center(
-                  child: Text("${connected ? 'ONLINE' : 'OFFLINE'}"),
-                ),
-              ),
+            connected
+                ? SizedBox()
+                : Container(
+                    height: 20.0,
+                    color: connected ? Color(0xFF00EE44) : Color(0xFFEE4400),
+                    child: Center(
+                      child: Text('OFFLINE'),
+                    ),
+                  ),
+            SizedBox(
+              height: 2,
             ),
             child
           ],
-        );
+        ));
       },
       child: child,
     );

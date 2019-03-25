@@ -235,13 +235,11 @@ class _HomePage extends State<HomePage> {
         body: Offline(
             child: RefreshIndicator(
           child: new Container(
-            height: 1920.0,
             child: Column(children: <Widget>[
               Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    SizedBox(height: 80.0),
                     Text(
                       "Quota",
                       textAlign: TextAlign.center,
@@ -269,7 +267,7 @@ class _HomePage extends State<HomePage> {
                   shrinkWrap: true,
                   padding: EdgeInsets.only(left: 24.0, right: 24.0),
                   children: <Widget>[
-                    SizedBox(height: 48.0),
+                    SizedBox(height: 30.0),
                     _input(false, "Number", "Recepient's Number",
                         (value) => recepients = value),
                     SizedBox(height: 25.0),
