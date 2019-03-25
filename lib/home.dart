@@ -3,6 +3,7 @@ import "package:meetsms_app/databaseClient.dart";
 import 'package:meetsms_app/settting.dart';
 import 'package:meetsms_app/request.dart';
 import 'package:meetsms_app/snackbar.dart';
+import 'offline.dart';
 
 class HomePage extends StatefulWidget {
   DatabaseClient db;
@@ -81,7 +82,7 @@ class _HomePage extends State<HomePage> {
                   color: Colors.grey[800], fontWeight: FontWeight.normal),
             ),
             actions: <Widget>[
-              // usually buttons at the bottom of the dialog
+              // uFlatButtonsually buttons at the bottom of the dialog
               new FlatButton(
                 child: new Text("Ok"),
                 onPressed: () {
@@ -211,93 +212,93 @@ class _HomePage extends State<HomePage> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-      key: mainKey,
-      resizeToAvoidBottomInset: false,
-      appBar: new AppBar(
-          iconTheme: new IconThemeData(color: Colors.black),
-          title: Hero(
-              tag: 'hero',
-              child: new ClipRRect(
-                  borderRadius: new BorderRadius.circular(20.0),
-                  child: Image(
-                    image: AssetImage(
-                      "images/icon.png",
-                    ),
-                    colorBlendMode: BlendMode.color,
-                    height: 40.0,
-                    fit: BoxFit.fitHeight,
-                  ))),
-          elevation: 0.0,
-          centerTitle: true,
-          backgroundColor: Colors.transparent),
-      drawer: drawerSidebar(),
-      body: RefreshIndicator(
-        child: new Container(
-          height: 1920.0,
-          child: Column(children: <Widget>[
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    "Quota",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(width: 5.0),
-                  Container(
-                    width: 30.0,
-                    height: 20.0,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(25.0),
-                        border:
-                            Border.all(color: Colors.grey[350], width: 1.0)),
-                    child: Text(
-                      DatabaseClient.quotaStatus.toString(),
+        key: mainKey,
+        resizeToAvoidBottomInset: false,
+        appBar: new AppBar(
+            iconTheme: new IconThemeData(color: Colors.black),
+            title: Hero(
+                tag: 'hero',
+                child: new ClipRRect(
+                    borderRadius: new BorderRadius.circular(20.0),
+                    child: Image(
+                      image: AssetImage(
+                        "images/icon.png",
+                      ),
+                      colorBlendMode: BlendMode.color,
+                      height: 40.0,
+                      fit: BoxFit.fitHeight,
+                    ))),
+            elevation: 0.0,
+            centerTitle: true,
+            backgroundColor: Colors.transparent),
+        drawer: drawerSidebar(),
+        body: Offline(
+            child: RefreshIndicator(
+          child: new Container(
+            height: 1920.0,
+            child: Column(children: <Widget>[
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      "Quota",
                       textAlign: TextAlign.center,
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  )
-                ],
+                    SizedBox(width: 5.0),
+                    Container(
+                      width: 30.0,
+                      height: 20.0,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25.0),
+                          border:
+                              Border.all(color: Colors.grey[350], width: 1.0)),
+                      child: Text(
+                        DatabaseClient.quotaStatus.toString(),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  ],
+                ),
               ),
-            ),
-            Center(
-              child: Form(
-                  child: ListView(
-                shrinkWrap: true,
-                padding: EdgeInsets.only(left: 24.0, right: 24.0),
-                children: <Widget>[
-                  SizedBox(height: 48.0),
-                  _input(false, "Number", "Recepient's Number",
-                      (value) => recepients = value),
-                  SizedBox(height: 25.0),
-                  _input(true, "Message", 'Your message',
-                      (value) => message = value),
-                  SizedBox(height: 24.0),
-                  loginButton(),
-                  SizedBox(height: 170.0),
-                ],
-              )),
-            )
-          ]),
-        ),
-        onRefresh: () async {
-          Map<String, dynamic> s = await widget.db.getinfo();
+              Center(
+                child: Form(
+                    child: ListView(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.only(left: 24.0, right: 24.0),
+                  children: <Widget>[
+                    SizedBox(height: 48.0),
+                    _input(false, "Number", "Recepient's Number",
+                        (value) => recepients = value),
+                    SizedBox(height: 25.0),
+                    _input(true, "Message", 'Your message',
+                        (value) => message = value),
+                    SizedBox(height: 24.0),
+                    loginButton(),
+                    SizedBox(height: 170.0),
+                  ],
+                )),
+              )
+            ]),
+          ),
+          onRefresh: () async {
+            Map<String, dynamic> s = await widget.db.getinfo();
 
-          String cookie = await http.post(<String, dynamic>{
-            'username': s['username'],
-            'password': s['password'],
-            'persistent': 'true',
-          }, loginUrl, cookieBool: true);
-          if (cookie != null) {
-            widget.db.updateInfo(s['password'], s['username'], cookie);
-            print('refresjed');
+            String cookie = await http.post(<String, dynamic>{
+              'username': s['username'],
+              'password': s['password'],
+              'persistent': 'true',
+            }, loginUrl, cookieBool: true);
+            if (cookie != null) {
+              widget.db.updateInfo(s['password'], s['username'], cookie);
+              print('refresjed');
 
-            showsnackbar("Refreshed login cookie", mainKey);
-          } else {
-            showsnackbar("Problem refreshing cookie", mainKey);
-          }
-        },
-      ),
-    );
+              showsnackbar("Refreshed login cookie", mainKey);
+            } else {
+              showsnackbar("Problem refreshing cookie", mainKey);
+            }
+          },
+        )));
   }
 }
