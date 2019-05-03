@@ -33,10 +33,16 @@ class _HomePage extends State<HomePage> {
   }
 
   void initialQuota() async {
-    int value = await widget.db.getEpoch();
-    value = DateTime.fromMillisecondsSinceEpoch(value).day - DateTime.now().day;
+    int day, month, year;
 
-    if (value < 0) {
+    int value = await widget.db.getEpoch();
+    day = DateTime.fromMillisecondsSinceEpoch(value).day - DateTime.now().day;
+    month =
+        DateTime.fromMillisecondsSinceEpoch(value).month - DateTime.now().month;
+    year =
+        DateTime.fromMillisecondsSinceEpoch(value).year - DateTime.now().year;
+
+    if (day < 0 || month < 0 || year < 0) {
       widget.db
           .updateEpoch(); //update epoch if more than a day has gone by which also updats the quota
     } else {

@@ -24,6 +24,8 @@ class DatabaseClient {
   }
 
   void updateEpoch() async {
+    // Future.delayed(duration);
+
     await db.update(
         "resettime",
         <String, dynamic>{
