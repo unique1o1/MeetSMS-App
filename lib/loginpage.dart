@@ -37,8 +37,8 @@ class _LoginPageSate extends State<LoginPage> {
         ),
       ));
 
-  Widget _input(
-      String validation, bool, String label, String hint, Function save) {
+  Widget _input(String validation, bool obscure, String label, String hint,
+      Function save) {
     return new TextFormField(
       decoration: InputDecoration(
         hintText: hint,
@@ -46,7 +46,7 @@ class _LoginPageSate extends State<LoginPage> {
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 20.0),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(20.0)),
       ),
-      obscureText: bool,
+      obscureText: obscure,
       validator: (value) => value.length <= 5 ? validation : null,
       onSaved: save,
     );
@@ -54,7 +54,7 @@ class _LoginPageSate extends State<LoginPage> {
 
   //google sign
   final formkey = new GlobalKey<FormState>();
-  checkFields() {
+  bool checkFields() {
     final form = formkey.currentState;
     if (form.validate()) {
       form.save();
