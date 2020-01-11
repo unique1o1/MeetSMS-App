@@ -3,6 +3,7 @@ import "package:meetsms_app/databaseClient.dart";
 import 'package:meetsms_app/settting.dart';
 import 'package:meetsms_app/request.dart';
 import 'package:meetsms_app/snackbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'offline.dart';
 
 class HomePage extends StatefulWidget {
@@ -23,13 +24,24 @@ class _HomePage extends State<HomePage> {
   final mainKey = GlobalKey<ScaffoldState>();
   String loginUrl = "http://www.meet.net.np/meet/action/login";
 
-  String smsUrl = "http://www.meet.net.np/meet/mod/sms/actions/send.php";
+  String ntcsmsUrl = "http://www.meet.net.np/meet/mod/sms/actions/send.php";
+  String ncellsmsUrl = "103.198.9.246:13131";
+  String ncellsmspath = "/cgi-bin/sendsms";
+
   bool isSending = false;
   int quota = 0;
+  int network;
 
   void initState() {
     super.initState();
+    getNetwork();
+
     initialQuota();
+  }
+
+  void getNetwork() async {
+    var pref = await SharedPreferences.getInstance();
+    network = pref.getInt("getNetwork");
   }
 
   void initialQuota() async {
@@ -101,6 +113,7 @@ class _HomePage extends State<HomePage> {
   }
 
   void sendMessage() async {
+    //1 for ncell 2 for ntc
     if (message.isEmpty || recepients.isEmpty) {
       showsnackbar(
           message.isEmpty ? "Message field is empty" : "Numbers field is empty",
@@ -112,7 +125,7 @@ class _HomePage extends State<HomePage> {
       if (numberList.length > 10) {
         showdialog("Sending more than 10 SMS is not supported.");
       }
-      String ncell = "";
+      List<String> ncell = new List();
       String WrongNumbers = "";
 
       numberList.forEach((String number) {
@@ -122,7 +135,7 @@ class _HomePage extends State<HomePage> {
           numbers += numbers.isEmpty ? temp : "," + temp;
         } else if (temp.contains(RegExp(r'^\d{10}$')) &&
             temp.contains(RegExp(r'^(980)|(981)|(982)'))) {
-          ncell += ncell.isEmpty ? temp : "," + temp;
+          ncell.add("+977" + temp);
         } else {
           WrongNumbers += WrongNumbers.isEmpty ? temp : "," + temp;
         }
@@ -133,39 +146,63 @@ class _HomePage extends State<HomePage> {
             mainKey);
       }
       if (ncell.isNotEmpty) {
-        showsnackbar(
-            "SMS to $ncell was not send because Ncell numbers are not supported",
-            mainKey);
-      }
-      if (numbers.isNotEmpty) {
-        setState(() {
-          isSending = true;
-        });
-        String cookie = await widget.db.getcookie();
-
-        int resp = await http.post(
-            <String, String>{
-              "recipient": numbers,
-              "message": message,
-              "SmsLanguage": "English",
-              "sendbutton": "Send Now"
-            },
-            smsUrl,
-            headers: {'cookie': cookie});
-        setState(() {
-          isSending = false;
-        });
-        if (resp == 302) {
-          showdialog("""Message was send to the following numbers:$numbers""");
-          DatabaseClient.quotaStatus += numbers.split(',').length;
-          print('object j j ${DatabaseClient.quotaStatus}');
-
-          widget.db.updateQuota(DatabaseClient.quotaStatus);
+        if (network == 1) {
           setState(() {
-            DatabaseClient.quotaStatus = DatabaseClient.quotaStatus;
+            isSending = true;
           });
-        } else
-          showdialog("""$resp Errored when sending message""");
+          int resp = await http.get(<String, String>{
+            "username": "merolagani",
+            "password": "m#Lag@n1",
+            "to": ncell.join(" "),
+            "from": "17174",
+            "text": message,
+            "": ""
+          }, ncellsmsUrl, ncellsmspath);
+          if (resp == 202) {
+            setState(() {
+              isSending = false;
+            });
+            showsnackbar("SMS to ${ncell.join(" ")} was  send", mainKey);
+          } else {
+            showdialog("""$resp error occured when sending message""");
+          }
+        } else {
+          showdialog("""Ncell number not supported""");
+        }
+      } else if (numbers.isNotEmpty) {
+        if (network == 2) {
+          setState(() {
+            isSending = true;
+          });
+          String cookie = await widget.db.getcookie();
+
+          int resp = await http.post(
+              <String, String>{
+                "recipient": numbers,
+                "message": message,
+                "SmsLanguage": "English",
+                "sendbutton": "Send Now"
+              },
+              ntcsmsUrl,
+              headers: {'cookie': cookie});
+          setState(() {
+            isSending = false;
+          });
+          if (resp == 302) {
+            showdialog(
+                """Message was send to the following numbers:$numbers""");
+            DatabaseClient.quotaStatus += numbers.split(',').length;
+            print('object  ${DatabaseClient.quotaStatus}');
+
+            widget.db.updateQuota(DatabaseClient.quotaStatus);
+            setState(() {
+              DatabaseClient.quotaStatus = DatabaseClient.quotaStatus;
+            });
+          } else
+            showdialog("""$resp Errored when sending message""");
+        } else {
+          showdialog("""NTC number not supported""");
+        }
       }
     }
   }
@@ -238,72 +275,78 @@ class _HomePage extends State<HomePage> {
             centerTitle: true,
             backgroundColor: Colors.transparent),
         drawer: drawerSidebar(),
-        body: Offline(
-            child: RefreshIndicator(
-          child: new Container(
-            child: Column(children: <Widget>[
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      "Quota",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(width: 5.0),
-                    Container(
-                      width: 30.0,
-                      height: 20.0,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25.0),
-                          border:
-                              Border.all(color: Colors.grey[350], width: 1.0)),
-                      child: Text(
-                        DatabaseClient.quotaStatus.toString(),
+        body: SingleChildScrollView(
+          child: Offline(
+              child: RefreshIndicator(
+            child: new Container(
+              child: Column(children: <Widget>[
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        "Quota",
                         textAlign: TextAlign.center,
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                    )
-                  ],
+                      SizedBox(width: 5.0),
+                      Container(
+                        width: 30.0,
+                        height: 20.0,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25.0),
+                            border: Border.all(
+                                color: Colors.grey[350], width: 1.0)),
+                        child: Text(
+                          DatabaseClient.quotaStatus.toString(),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-              ),
-              Center(
-                child: Form(
-                    child: ListView(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.only(left: 24.0, right: 24.0),
-                  children: <Widget>[
-                    SizedBox(height: 30.0),
-                    _input(false, "Number", "Recepient's Number",
-                        (value) => recepients = value),
-                    SizedBox(height: 25.0),
-                    _input(true, "Message", 'Your message',
-                        (value) => message = value),
-                    SizedBox(height: 24.0),
-                    loginButton(),
-                    SizedBox(height: 112.0),
-                  ],
-                )),
-              )
-            ]),
-          ),
-          onRefresh: () async {
-            Map<String, dynamic> s = await widget.db.getinfo();
+                Center(
+                  child: Form(
+                      child: ListView(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.only(left: 24.0, right: 24.0),
+                    children: <Widget>[
+                      SizedBox(height: 30.0),
+                      _input(false, "Number", "Recepient's Number",
+                          (value) => recepients = value),
+                      SizedBox(height: 25.0),
+                      _input(true, "Message", 'Your message',
+                          (value) => message = value),
+                      SizedBox(height: 24.0),
+                      loginButton(),
+                      SizedBox(height: 112.0),
+                    ],
+                  )),
+                )
+              ]),
+            ),
+            onRefresh: () async {
+              if (network == 1) {
+                //if ncell skip
+                return;
+              }
+              Map<String, dynamic> s = await widget.db.getinfo();
 
-            String cookie = await http.post(<String, dynamic>{
-              'username': s['username'],
-              'password': s['password'],
-              'persistent': 'true',
-            }, loginUrl, cookieBool: true);
-            if (cookie != null) {
-              widget.db.updateInfo(s['password'], s['username'], cookie);
-              print('refresjed');
+              String cookie = await http.post(<String, dynamic>{
+                'username': s['username'],
+                'password': s['password'],
+                'persistent': 'true',
+              }, loginUrl, cookieBool: true);
+              if (cookie != null) {
+                widget.db.updateInfo(s['password'], s['username'], cookie);
+                print('refresjed');
 
-              showsnackbar("Refreshed login cookie", mainKey);
-            } else {
-              showsnackbar("Problem refreshing cookie", mainKey);
-            }
-          },
-        )));
+                showsnackbar("Refreshed login cookie", mainKey);
+              } else {
+                showsnackbar("Problem refreshing cookie", mainKey);
+              }
+            },
+          )),
+        ));
   }
 }

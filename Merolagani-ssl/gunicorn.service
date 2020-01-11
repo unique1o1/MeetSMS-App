@@ -1,0 +1,12 @@
+[Unit]
+Description=gunicorn daemon
+After=network.target
+
+[Service]
+User=podamibe
+Group=podamibe
+WorkingDirectory=/home/podamibe/saveload_backend
+ExecStart=/usr/bin/gunicorn --workers 3 --bind unix:/home/podamibe/saveload_backend/saveload_backend.sock charting_library_charts.wsgi:application
+Restart=always
+[Install]
+WantedBy=multi-user.target

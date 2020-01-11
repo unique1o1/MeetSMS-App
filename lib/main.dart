@@ -17,7 +17,7 @@ class MyApp extends StatefulWidget {
 
 class Page extends State<MyApp> {
   bool isLoading = true;
-  bool val;
+  int val;
   DatabaseClient db;
 
   void getinfo() async {
@@ -25,7 +25,7 @@ class Page extends State<MyApp> {
     await db.create();
 
     var pref = await SharedPreferences.getInstance();
-    val = pref.getBool("gotinfo");
+    val = pref.getInt("getNetwork");
     setState(() {
       isLoading = false;
     });
@@ -46,7 +46,7 @@ class Page extends State<MyApp> {
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : val ?? false ? HomePage(db) : LoginPage(db),
+          : val == 1 || val == 2 ?? val != null ? HomePage(db) : LoginPage(db),
     );
   }
 }

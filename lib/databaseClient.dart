@@ -90,7 +90,7 @@ class DatabaseClient {
 
   Future<Map<String, dynamic>> getinfo() async {
     List<Map<String, dynamic>> results =
-        await db.rawQuery("select * from user limit 1");
+        await db.rawQuery("select * from user order by id desc limit 1");
 
     return results[0];
   }

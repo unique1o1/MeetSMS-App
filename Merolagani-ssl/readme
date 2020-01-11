@@ -1,0 +1,62 @@
+# Instrution to setup charting_library_charts
+
+### First install
+- Install >=python3.4 / pip
+
+- Install postgres
+
+- Install nginx
+
+## Install Server Dependency
+    sudo pip3 install -r requirements.txt
+
+### Install gunicorn 
+    sudo pip3 install gunicorn
+
+
+## SSH Credential
+    ssh podamibe@103.198.9.223
+    password:006014$$xxX
+    
+### Database Credential
+    PGAdmin password: 006014$$xxX
+    PGAdmin port: 5321
+    Database NAME: charting_library
+    database username: podamibe
+    Database password: Chobhar570)
+    PSQL port: 5432
+    
+- Edit settings.py with above Database Credential
+
+- path for nginx conf files ->
+                                `/etc/nginx/nginx.conf`
+                                `/etc/nginx/sites-available/api`
+
+
+- path for gunicorn ->
+                                `/etc/systemd/system/gunicorn.service`
+
+- path for postgres configuration ->
+                                `/var/lib/pgsql/data/pg_hba.conf`
+                                `/var/lib/pgsql/data/postgresql.conf`
+
+- path for pgadmin configuration ->
+                                `/etc/httpd/conf.d/pgadmin4.conf`
+
+
+# Note
+
+- Edit file `/etc/nginx/sites-available/api` and `/etc/systemd/system/gunicorn.service` to point to django project and it's socket
+
+- api file should go inside `/etc/nginx/sites-available/api`
+
+- domain.crt and domain.rsa should go inside `/etc/nginx/`
+  
+## Useful Commands 
+
+    sudo systemctl start gunicorn.service         
+    sudo systemctl enable gunicorn.service 
+    sudo systemctl restart nginx.service 
+    sudo systemctl start nginx.service 
+    sudo systemctl stop nginx.service 
+

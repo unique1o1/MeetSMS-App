@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:meetsms_app/databaseClient.dart';
+import 'package:meetsms_app/loginpage.dart';
 import 'dart:async';
 import 'package:meetsms_app/request.dart';
 import 'package:meetsms_app/snackbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Settings extends StatefulWidget {
   DatabaseClient db;
@@ -65,6 +67,15 @@ class _settingState extends State<Settings> {
     return false;
   }
 
+  void logoutUser() async {
+    var pref = await SharedPreferences.getInstance();
+    pref.setInt("getNetwork", 0);
+    Navigator.of(context)
+        .pushReplacement(new MaterialPageRoute(builder: (context) {
+      return new LoginPage(widget.db);
+    }));
+  }
+
   void loginUser() async {
     if (checkFields()) {
       Map<String, dynamic> s = await widget.db.getinfo();
@@ -95,6 +106,21 @@ class _settingState extends State<Settings> {
       }
     }
   }
+
+  Widget logoutButton() => Padding(
+        padding: EdgeInsets.symmetric(vertical: 16.0),
+        child: RaisedButton(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          onPressed: logoutUser,
+          padding: EdgeInsets.all(12),
+          color: Colors.lightBlueAccent,
+          child: !isSending
+              ? Text('Logout', style: TextStyle(color: Colors.white))
+              : CircularProgressIndicator(),
+        ),
+      );
 
   Widget loginButton() => Padding(
         padding: EdgeInsets.symmetric(vertical: 16.0),
@@ -140,6 +166,7 @@ class _settingState extends State<Settings> {
                               'Password', (value) => password = value),
                           SizedBox(height: 24.0),
                           loginButton(),
+                          logoutButton()
                         ],
                       )),
                 )

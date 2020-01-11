@@ -18,10 +18,25 @@ class _LoginPageSate extends State<LoginPage> {
   String username;
   String password;
   bool isSending = false;
+  int radioItemConditionValue = 1;
 
   Session http = Session();
   String loginUrl = "http://www.meet.net.np/meet/action/login";
   final mainKey = GlobalKey<ScaffoldState>();
+  BoxDecoration boxDecoration = BoxDecoration(boxShadow: [
+    BoxShadow(
+        color: Colors.grey[500],
+        blurRadius: 0, // has the effect of softening the shadow
+        offset: Offset(
+            0, // horizontal, move right 10
+            1 // vertical, move down 10
+            ))
+  ], color: Colors.white);
+  void _itemconditionValueHandler(int value) {
+    setState(() {
+      radioItemConditionValue = value;
+    });
+  }
 
   final logo = Hero(
       tag: 'hero',
@@ -69,35 +84,47 @@ class _LoginPageSate extends State<LoginPage> {
       isSending = true;
     });
     if (checkFields()) {
-      String cookie = await http.post(<String, dynamic>{
-        'username': username,
-        'password': password,
-        'persistent': "true",
-      }, loginUrl, cookieBool: true);
-      if (cookie != null) {
-        widget.db.insertInfo(password, username, cookie);
-
-        widget.db.insertResetTime();
-
-        Map<String, dynamic> a = await widget.db.getinfo();
-        print(a['username']);
-
-        var pref = await SharedPreferences.getInstance();
-        pref.setBool("gotinfo", true);
+      if (radioItemConditionValue == 1) {
+        //Ncell
+        widget.db.insertInfo(password, username, "Not needed for Ncell");
         setState(() {
           isSending = false;
         });
-        Navigator.of(context)
-            .pushReplacement(new MaterialPageRoute(builder: (context) {
-          return new HomePage(widget.db);
-        }));
       } else {
-        setState(() {
-          isSending = false;
-        });
-        showsnackbar("Username/ Password you entered is mistake", mainKey);
+        String cookie = await http.post(<String, dynamic>{
+          'username': username,
+          'password': password,
+          'persistent': "true",
+        }, loginUrl, cookieBool: true);
+        if (cookie != null) {
+          widget.db.insertInfo(password, username, cookie);
+
+          widget.db.insertResetTime();
+
+          Map<String, dynamic> a = await widget.db.getinfo();
+          print(a['username']);
+
+          setState(() {
+            isSending = false;
+          });
+        } else {
+          setState(() {
+            isSending = false;
+          });
+          showsnackbar("Username/ Password you entered is mistake", mainKey);
+          return;
+        }
       }
+      var pref = await SharedPreferences.getInstance();
+      pref.setInt("getNetwork", radioItemConditionValue);
+      Navigator.of(context)
+          .pushReplacement(new MaterialPageRoute(builder: (context) {
+        return new HomePage(widget.db);
+      }));
     }
+    setState(() {
+      isSending = false;
+    });
   }
 
   Widget loginButton() => Padding(
@@ -114,6 +141,31 @@ class _LoginPageSate extends State<LoginPage> {
               : CircularProgressIndicator(),
         ),
       );
+
+  Center generateItemRadioTile() {
+    return Center(
+      child: Container(
+        child: Row(
+          children: <Widget>[
+            Radio(
+              value: 1,
+              groupValue: radioItemConditionValue,
+              onChanged: _itemconditionValueHandler,
+            ),
+            Text("Ncell"),
+            Radio(
+              value: 2,
+              groupValue: radioItemConditionValue,
+              onChanged: _itemconditionValueHandler,
+            ),
+            Text("NTC"),
+          ],
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,6 +191,7 @@ class _LoginPageSate extends State<LoginPage> {
                 _input("Password must be more than 5 character ", true,
                     "Password", 'Password', (value) => password = value),
                 SizedBox(height: 24.0),
+                generateItemRadioTile(),
                 loginButton(),
               ],
             )),

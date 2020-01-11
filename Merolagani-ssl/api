@@ -1,0 +1,28 @@
+server {
+ listen 8843 ssl;
+server_name tradingdata.merolagani.com;
+ssl off;
+ ssl_certificate domain.crt;
+ ssl_certificate_key domain.rsa;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        root /home/podamibe/saveload_backend;
+    }
+  location / {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass http://unix:/home/podamibe/saveload_backend/saveload_backend.sock;
+    }
+}
+server {
+listen 80;
+
+server_name 103.198.9.221;
+
+return 301 https://$host$request_url;
+
+
+}

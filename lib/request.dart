@@ -12,6 +12,14 @@ class Session {
     return response.statusCode;
   }
 
+  Future<dynamic> get(Map<String, dynamic> data, String url, String path,
+      {bool cookieBool: false, Map<String, String> headers: const {}}) async {
+    var uri = Uri.http(url, path, data);
+    http.Response response = await http.get(uri, headers: headers);
+
+    return response.statusCode;
+  }
+
   String updateCookie(http.Response response) {
     String rawCookie = response.headers['set-cookie'];
     if (rawCookie != null) {
